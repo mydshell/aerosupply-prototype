@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroSupply - MRO Station</title>
+    <!-- Fuente moderna Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Estilos y FontAwesome -->
+    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="app-layout">
+        <!-- BARRA LATERAL MODERNA -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-plane-departure"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>AeroSupply</h2>
+                    <span>MRO Station</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button id="navCreateBtn" class="nav-item active">
+                    <i class="fa-solid fa-square-plus"></i>
+                    <span>Create Request</span>
+                </button>
+                <button id="navMyReqsBtn" class="nav-item">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>My Requisitions</span>
+                </button>
+                <button id="navProcurementBtn" class="nav-item">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Procurement & Quotes</span>
+                </button>
+                <button id="navVendorsBtn" class="nav-item">
+                    <i class="fa-solid fa-building-circle-check"></i>
+                    <span>Vendor Directory</span>
+                </button>
+                <button id="navWarehouseBtn" class="nav-item">
+                    <i class="fa-solid fa-boxes-packing"></i>
+                    <span>Warehouse Receiving</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="user-avatar">JS</div>
+                <div class="user-info">
+                    <span class="user-name">J. Serna</span>
+                    <span class="user-role">Line Mechanic</span>
+                </div>
+                <button type="button" class="btn-logout" title="Sign Out" onclick="handleSignOut()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL -->
+        <main class="main-viewport">
+            <header class="app-topbar">
+                <div class="topbar-title">
+                    <h1 id="viewTitle">Create Request</h1>
+                </div>
+                <div class="topbar-actions">
+                    <div class="station-pill">
+                        <span class="status-dot"></span>
+                        CYUL Hangar
+                    </div>
+                </div>
+            </header>
+
+            <div class="scroll-content">
+                <section id="contentArea" class="content-container">
+                    <!-- ==================== VISTA: CREATE REQUEST ==================== -->
+                    <div id="viewCreate" class="form-wrapper">
+
+                        <!-- Tarjeta 1: Información de Contexto y Aeronave -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Request Scope</h3>
+                                <p>Define the target destination, priority, and maintenance reason</p>
+                            </div>
+
+                            <div class="grid-3">
+                                <!-- Target / Matrícula o Stock -->
+                                <div class="input-group">
+                                    <label for="reqDestination">Destination Target <span
+                                            class="required">*</span></label>
+                                    <select id="reqDestination" class="form-control">
+                                        <option value="C-GYBF">Tail Number: C-GYBF (C172S)</option>
+                                        <option value="C-GUBP">Tail Number: C-GUBP (C152)</option>
+                                        <option value="C-FAEN">Tail Number: C-FAEN (C172R)</option>
+                                        <option value="STOCK">General Hangar Stock</option>
+                                    </select>
+                                </div>
+
+                                <!-- Nivel de Urgencia -->
+                                <div class="input-group">
+                                    <label>Urgency Level <span class="required">*</span></label>
+                                    <div class="urgency-toggle">
+                                        <label class="toggle-option active" id="lblRoutine">
+                                            <input type="radio" name="urgencyRadio" value="Routine" checked
+                                                onchange="toggleUrgencyStyle()">
+                                            <i class="fa-regular fa-clock"></i> Routine
+                                        </label>
+                                        <label class="toggle-option" id="lblAOG">
+                                            <input type="radio" name="urgencyRadio" value="AOG"
+                                                onchange="toggleUrgencyStyle()">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> AOG
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Motivo desplegable -->
+                                <div class="input-group">
+                                    <label for="reqReason">Reason for Request <span class="required">*</span></label>
+                                    <select id="reqReason" class="form-control" onchange="handleReasonChange()">
+                                        <option value="Unscheduled Maintenance">Unscheduled Maintenance</option>
+                                        <option value="Scheduled Maintenance">Scheduled Maintenance</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Campo obligatorio condicional oculto por defecto -->
+                            <div id="otherReasonWrapper" class="input-group mt-3" style="display: none;">
+                                <label for="reqOtherReasonDetail">Specify Reason <span class="required">*</span></label>
+                                <input type="text" id="reqOtherReasonDetail" class="form-control"
+                                    placeholder="Provide detailed operational reason...">
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta 2: Lista de Partes (Notas integradas en columna horizontal) -->
+                        <div class="card">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <h3>Required Parts</h3>
+                                    <p>Specify parts, quantities, and direct procurement notes or links</p>
+                                </div>
+                                <button type="button" id="btnAddPart" class="btn-secondary" onclick="addPartRow()">
+                                    <i class="fa-solid fa-plus"></i> Add Part Line
+                                </button>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="parts-table" id="partsTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 45px;">#</th>
+                                            <th style="width: 190px;">Part Number (P/N) <span class="required">*</span>
+                                            </th>
+                                            <th>Part Description <span class="required">*</span></th>
+                                            <th style="width: 85px; text-align: center;">Qty <span
+                                                    class="required">*</span></th>
+                                            <th style="width: 250px;">Notes / Reference Link</th>
+                                            <th style="width: 50px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="partsTableBody">
+                                        <!-- Fila 1 inicial limpia -->
+                                        <tr id="row-1" class="part-main-row">
+                                            <td class="col-index">1</td>
+                                            <td>
+                                                <input type="text" placeholder="e.g. C156-2"
+                                                    class="form-control mono uppercase input-pn" data-row="1"
+                                                    onblur="lookupPartDescription(this, 1)">
+                                            </td>
+                                            <td>
+                                                <input type="text" placeholder="Description or part name"
+                                                    class="form-control input-desc" data-row="1">
+                                            </td>
+                                            <td>
+                                                <input type="number" min="1" value="1"
+                                                    class="form-control mono text-center input-qty" data-row="1">
+                                            </td>
+                                            <td>
+                                                <input type="text" placeholder="Optional links, AMM ref, vendor..."
+                                                    class="form-control input-part-note" data-row="1">
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-icon btn-delete"
+                                                    onclick="handleRemoveRow(1)">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Barra de acciones -->
+                        <div class="form-actions">
+                            <button type="button" id="btnResetForm" class="btn-ghost" onclick="resetForm()">Reset
+                                Fields</button>
+                            <button type="button" id="btnSubmitRequest" class="btn-primary" disabled
+                                onclick="validateAndSubmitRequest()">
+                                <i class="fa-solid fa-paper-plane"></i> Submit Request
+                            </button>
+                        </div>
+
+                    </div>
+                    <!-- ==================== VISTA: MY REQUISITIONS (HU-002) ==================== -->
+                    <div id="viewRequisitions" class="form-wrapper hidden">
+
+                        <!-- Barra de Filtros y Búsqueda -->
+                        <div class="card p-card-sm flex-between">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="tableSearch"
+                                    placeholder="Search by Request ID, Part Number, or Tail..." class="form-control"
+                                    onkeyup="filterRequisitionsTable()">
+                            </div>
+
+                            <div class="filter-group">
+                                <span class="filter-label">Status:</span>
+                                <button type="button" class="btn-filter active"
+                                    onclick="filterByStatus('ALL', this)">All</button>
+                                <button type="button" class="btn-filter"
+                                    onclick="filterByStatus('Pending', this)">Pending</button>
+                                <button type="button" class="btn-filter"
+                                    onclick="filterByStatus('Quoting', this)">Quoting</button>
+                                <button type="button" class="btn-filter" onclick="filterByStatus('In Transit', this)">In
+                                    Transit</button>
+                                <button type="button" class="btn-filter" onclick="filterByStatus('In Stock', this)">In
+                                    Stock</button>
+                                <button type="button" class="btn-filter" onclick="filterByStatus('Purchased', this)">Purchased</button>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Consultas -->
+                        <div class="card p-0">
+                            <div class="table-container border-0">
+                                <table class="parts-table" id="requisitionsTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 140px;">Request ID</th>
+                                            <th style="width: 150px;">Date (UTC)</th>
+                                            <th style="width: 120px;">Destination</th>
+                                            <th style="width: 160px;">Part Number</th>
+                                            <th>Description</th>
+                                            <th style="width: 70px; text-align: center;">Qty</th>
+                                            <th style="width: 100px; text-align: center;">Urgency</th>
+                                            <th style="width: 120px; text-align: center;">Status</th>
+                                            <th style="width: 140px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="requisitionsTableBody">
+                                        <!-- Requerimiento 1: In Transit -->
+                                        <tr data-id="REQ-2026-0839" data-status="In Transit"
+                                            data-carrier="FedEx Aviation" data-awb="7849-2091-8831"
+                                            data-eta="2026-10-18">
+                                            <td class="col-id">REQ-2026-0839</td>
+                                            <td class="col-date">2026-10-14 14:20</td>
+                                            <td class="col-target">C-GYBF</td>
+                                            <td class="col-pn">C253001-0101</td>
+                                            <td class="col-desc">LOCK ASSY - DOOR L/H</td>
+                                            <td class="col-qty">1</td>
+                                            <td class="text-center"><span class="badge-urgency aog">AOG</span></td>
+                                            <td class="text-center"><span class="badge-status transit">In Transit</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-table-action"
+                                                    onclick="openDetailsDrawer(this)">Details</button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Requerimiento 2: Pending -->
+                                        <tr data-id="REQ-2026-0835" data-status="Pending" data-carrier="N/A"
+                                            data-awb="N/A" data-eta="Pending PO">
+                                            <td class="col-id">REQ-2026-0835</td>
+                                            <td class="col-date">2026-10-15 09:12</td>
+                                            <td class="col-target">STOCK</td>
+                                            <td class="col-pn">AN507-1032R10</td>
+                                            <td class="col-desc">MACHINE SCREW</td>
+                                            <td class="col-qty">25</td>
+                                            <td class="text-center"><span class="badge-urgency routine">Routine</span>
+                                            </td>
+                                            <td class="text-center"><span class="badge-status pending">Pending</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="table-actions-cell">
+                                                    <button type="button" class="btn-table-action"
+                                                        onclick="openDetailsDrawer(this)"
+                                                        title="View Details">Details</button>
+                                                    <button type="button" class="btn-icon-action btn-edit-action"
+                                                        onclick="openEditModal(this)" title="Edit Request">
+                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-icon-action btn-delete-action"
+                                                        onclick="openDeleteModal(this)" title="Cancel Request">
+                                                        <i class="fa-regular fa-trash-can"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Requerimiento 4 (HU-007): Purchased - Ready for Dispatch -->
+                                        <tr data-id="REQ-2026-0840" data-status="Purchased" data-carrier="N/A"
+                                            data-awb="N/A" data-eta="Pending Dispatch">
+                                            <td class="col-id">REQ-2026-0840</td>
+                                            <td class="col-date">2026-10-16 16:45</td>
+                                            <td class="col-target">C-GUBP</td>
+                                            <td class="col-pn">NAS1329A06K75</td>
+                                            <td class="col-desc">RIVET NUT 1/4-20</td>
+                                            <td class="col-qty">50</td>
+                                            <td class="text-center"><span class="badge-urgency routine">Routine</span></td>
+                                            <td class="text-center"><span class="badge-status purchased">Purchased</span></td>
+                                            <td class="text-center">
+                                                <div class="table-actions-cell">
+                                                    <button type="button" class="btn-table-action btn-dispatch-action"
+                                                        onclick="openDispatchModal(this)" title="Register Logistics Dispatch">
+                                                        <i class="fa-solid fa-truck-ramp-box"></i> Dispatch
+                                                    </button>
+                                                    <button type="button" class="btn-table-action"
+                                                        onclick="openDetailsDrawer(this)"
+                                                        title="View Details">Details</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Requerimiento 3: In Stock -->
+                                        <tr data-id="REQ-2026-0810" data-status="In Stock"
+                                            data-location="Bay 2 - Shelf B">
+                                            <td class="col-id">REQ-2026-0810</td>
+                                            <td class="col-date">2026-10-04 11:30</td>
+                                            <td class="col-target">C-GYBF</td>
+                                            <td class="col-pn">S3432-A</td>
+                                            <td class="col-desc">NUTPLATE</td>
+                                            <td class="col-qty">10</td>
+                                            <td class="text-center"><span class="badge-urgency routine">Routine</span>
+                                            </td>
+                                            <td class="text-center"><span class="badge-status instock">In Stock</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="table-actions-cell">
+                                                    <button type="button" class="btn-table-action"
+                                                        onclick="openDetailsDrawer(this)"
+                                                        title="View Details">Details</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- ==================== VISTA: PROCUREMENT & QUOTES (HU-004, HU-005, HU-006) ==================== -->
+                    <div id="viewProcurement" class="form-wrapper hidden">
+
+                        <!-- Context Header Banner: Requested Part Details & Dynamic Workflow Status -->
+                        <div class="card p-card-sm flex-between proc-header-card">
+                            <div class="proc-context-details">
+                                <div class="context-badges-row">
+                                    <span class="badge-code">REQ-2026-0839</span>
+                                    <span class="badge-tail"><i class="fa-solid fa-plane"></i> Tail: C-GYBF (C172S)</span>
+                                    <span id="procUrgencyBadge" class="badge-urgency aog"><i class="fa-solid fa-triangle-exclamation"></i> AOG</span>
+                                    <span class="badge-station"><i class="fa-solid fa-location-dot"></i> CYUL Hangar 2</span>
+                                </div>
+                                <h2 class="proc-part-heading">P/N: C253001-0101 &mdash; <span class="text-secondary-title">LOCK ASSY - DOOR L/H</span></h2>
+                                <p class="proc-part-meta">Requested Quantity: <strong>1 EA</strong> &bull; Maintenance Reason: <strong>Unscheduled Defect</strong> &bull; Requested by: <strong>J. Serna</strong></p>
+                            </div>
+
+                            <!-- Workflow Status Indicator & Interactive Demo Controls -->
+                            <div class="proc-workflow-tracker">
+                                <span class="workflow-label">Workflow Progress</span>
+                                <div id="procWorkflowBadge" class="badge-status-lg status-step-quoting">
+                                    <i class="fa-solid fa-scale-balanced"></i> Comparing Quotes
+                                </div>
+                                <div class="scenario-toggle-wrapper">
+                                    <span class="scenario-label">Urgency Rule Demo:</span>
+                                    <button type="button" id="btnToggleUrgency" class="btn-scenario-toggle" onclick="toggleRequisitionUrgency()" title="Click to test approval threshold with AOG vs Routine">
+                                        <i class="fa-solid fa-arrows-rotate"></i> Switch to Routine
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1. HU-004: Quotes Comparison (Cotizaciones) -->
+                        <div class="card" id="cardQuotesComparison">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <div class="step-tag"><i class="fa-solid fa-list-check"></i> HU-004</div>
+                                    <h3>Vendor Quotes Comparison</h3>
+                                    <p>Compare certified suppliers for requested part <strong>C253001-0101</strong> based on unit price, freight, lead time, and airworthiness credentials.</p>
+                                </div>
+                                <div class="table-legend">
+                                    <span class="legend-pill"><i class="fa-solid fa-shield-halved"></i> 4 Approved Aviation Suppliers</span>
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="parts-table quotes-table" id="quotesTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 260px;">Vendor Name</th>
+                                            <th style="width: 140px; text-align: right;">Unit Price</th>
+                                            <th style="width: 150px; text-align: right;">Estimated Freight</th>
+                                            <th style="width: 150px; text-align: center;">Lead Time (Days)</th>
+                                            <th style="width: 90px; text-align: center;">Currency</th>
+                                            <th style="width: 150px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="quotesTableBody">
+                                        <!-- Dummy Row 1: Boeing Distribution Inc. -->
+                                        <tr id="quote-row-0" class="quote-row" data-quote-id="0">
+                                            <td>
+                                                <div class="vendor-profile">
+                                                    <span class="vendor-name"><i class="fa-solid fa-building"></i> Boeing Distribution Inc.</span>
+                                                    <span class="vendor-sub">FAA-AC 00-56B &bull; Stock: Miami (MIA)</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-right mono font-semibold">$1,680.00</td>
+                                            <td class="text-right mono">$120.00</td>
+                                            <td class="text-center">
+                                                <span class="lead-badge lead-express"><i class="fa-solid fa-bolt"></i> 1 Day (AOG)</span>
+                                            </td>
+                                            <td class="text-center mono">USD</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-select-quote" onclick="selectQuote(0)">
+                                                    <i class="fa-regular fa-circle-check"></i> Select Quote
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Dummy Row 2: Aviall Services -->
+                                        <tr id="quote-row-1" class="quote-row" data-quote-id="1">
+                                            <td>
+                                                <div class="vendor-profile">
+                                                    <span class="vendor-name"><i class="fa-solid fa-building"></i> Aviall Services</span>
+                                                    <span class="vendor-sub">EASA.145.0210 &bull; Stock: Dallas (DFW)</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-right mono font-semibold">$1,420.00</td>
+                                            <td class="text-right mono">$85.00</td>
+                                            <td class="text-center">
+                                                <span class="lead-badge lead-standard"><i class="fa-regular fa-clock"></i> 3 Days</span>
+                                            </td>
+                                            <td class="text-center mono">USD</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-select-quote" onclick="selectQuote(1)">
+                                                    <i class="fa-regular fa-circle-check"></i> Select Quote
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Dummy Row 3: AeroPrecision Supplies -->
+                                        <tr id="quote-row-2" class="quote-row" data-quote-id="2">
+                                            <td>
+                                                <div class="vendor-profile">
+                                                    <span class="vendor-name"><i class="fa-solid fa-building"></i> AeroPrecision Supplies</span>
+                                                    <span class="vendor-sub">OEM Factory Direct &bull; Stock: Toronto (YYZ)</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-right mono font-semibold">$1,850.00</td>
+                                            <td class="text-right mono">$65.00</td>
+                                            <td class="text-center">
+                                                <span class="lead-badge lead-fast"><i class="fa-solid fa-truck-fast"></i> 2 Days</span>
+                                            </td>
+                                            <td class="text-center mono">USD</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-select-quote" onclick="selectQuote(2)">
+                                                    <i class="fa-regular fa-circle-check"></i> Select Quote
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Dummy Row 4: Dallas Airmotive Parts -->
+                                        <tr id="quote-row-3" class="quote-row" data-quote-id="3">
+                                            <td>
+                                                <div class="vendor-profile">
+                                                    <span class="vendor-name"><i class="fa-solid fa-building"></i> Dallas Airmotive Parts</span>
+                                                    <span class="vendor-sub">ISO 9001:2015 &bull; Stock: Atlanta (ATL)</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-right mono font-semibold">$1,290.00</td>
+                                            <td class="text-right mono">$95.00</td>
+                                            <td class="text-center">
+                                                <span class="lead-badge lead-economy"><i class="fa-regular fa-calendar"></i> 5 Days</span>
+                                            </td>
+                                            <td class="text-center mono">USD</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-select-quote" onclick="selectQuote(3)">
+                                                    <i class="fa-regular fa-circle-check"></i> Select Quote
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 2. HU-005: Manager Approval (Aprobación de Gerencia) -->
+                        <div class="card approval-card hidden" id="cardManagerApproval">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <div class="step-tag"><i class="fa-solid fa-user-shield"></i> HU-005</div>
+                                    <h3>Manager Approval</h3>
+                                    <p>Review selected commercial quote and authorize procurement expenditure in accordance with governance policies.</p>
+                                </div>
+                                <div id="approvalStatusBadgeContainer">
+                                    <!-- Dynamic Badge: Pending Manager Approval / Approved / Rejected -->
+                                </div>
+                            </div>
+
+                            <!-- Selected Quote Summary Breakdown -->
+                            <div class="selected-quote-banner" id="selectedQuoteSummary">
+                                <div class="quote-summary-item">
+                                    <span class="label">Selected Vendor</span>
+                                    <strong id="summaryVendorName" class="value text-primary">--</strong>
+                                </div>
+                                <div class="quote-summary-item">
+                                    <span class="label">Unit Price</span>
+                                    <span id="summaryUnitPrice" class="value mono">--</span>
+                                </div>
+                                <div class="quote-summary-item">
+                                    <span class="label">Estimated Freight</span>
+                                    <span id="summaryFreight" class="value mono">--</span>
+                                </div>
+                                <div class="quote-summary-item">
+                                    <span class="label">Lead Time</span>
+                                    <span id="summaryLeadTime" class="value">--</span>
+                                </div>
+                                <div class="quote-summary-item total-item">
+                                    <span class="label">Total Landed Cost</span>
+                                    <strong id="summaryTotalCost" class="value mono text-total">--</strong>
+                                </div>
+                            </div>
+
+                            <!-- Policy Governance Trigger Banner -->
+                            <div id="approvalPolicyAlert" class="approval-alert-banner">
+                                <i class="fa-solid fa-circle-exclamation alert-icon"></i>
+                                <div class="alert-content">
+                                    <strong id="alertPolicyTitle">Approval Governance Threshold Triggered</strong>
+                                    <p id="alertPolicyReason">This quote requires executive review because total expenditure exceeds $1,500.00 USD or the aircraft has an active AOG status.</p>
+                                </div>
+                            </div>
+
+                            <!-- Rejection Reason Card (Shown only when rejected) -->
+                            <div id="rejectionFeedbackCard" class="rejection-feedback-card hidden">
+                                <div class="rejection-feedback-header">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                    <span>Quote Rejected by Line Maintenance Manager</span>
+                                </div>
+                                <p id="rejectionFeedbackText" class="rejection-reason-body">--</p>
+                                <div class="rejection-feedback-actions">
+                                    <button type="button" class="btn-secondary btn-sm" onclick="resetQuoteSelection()">
+                                        <i class="fa-solid fa-arrow-rotate-left"></i> Re-select Another Vendor Quote
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Manager Approval Actions Toolbar -->
+                            <div class="approval-actions-toolbar" id="approvalActionsToolbar">
+                                <div class="manager-identity">
+                                    <i class="fa-solid fa-user-check"></i>
+                                    <span>Manager Sign-Off: <strong>M. Henderson (Director of Maintenance)</strong></span>
+                                </div>
+                                <div class="approval-buttons-group">
+                                    <button type="button" id="btnRejectQuote" class="btn-danger" onclick="openRejectQuoteModal()">
+                                        <i class="fa-solid fa-xmark"></i> Reject
+                                    </button>
+                                    <button type="button" id="btnApproveQuote" class="btn-approve" onclick="handleApproveQuote()">
+                                        <i class="fa-solid fa-check"></i> Approve
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. HU-006: Issue Purchase Order (Orden de Compra) -->
+                        <div class="card po-card hidden" id="cardPurchaseOrder">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <div class="step-tag"><i class="fa-solid fa-file-invoice-dollar"></i> HU-006</div>
+                                    <h3>Issue Purchase Order (PO)</h3>
+                                    <p>Commercial quote approved. Assign purchase order numbering and select the financial settlement channel to dispatch.</p>
+                                </div>
+                                <div id="poStatusBadgeContainer">
+                                    <span class="badge-status-outline" id="poStatusBadge">
+                                        <i class="fa-solid fa-file-signature"></i> Ready to Issue
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="po-form-body">
+                                <div class="grid-3">
+                                    <!-- PO Number (input text) -->
+                                    <div class="input-group">
+                                        <label for="poNumberInput">PO Number <span class="required">*</span></label>
+                                        <input type="text" id="poNumberInput" class="form-control mono uppercase" placeholder="e.g. PO-2026-8942">
+                                        <span class="field-hint">Enterprise PO Reference &bull; Editable</span>
+                                    </div>
+
+                                    <!-- Payment Method (Select dropdown) -->
+                                    <div class="input-group">
+                                        <label for="poPaymentMethod">Payment Method <span class="required">*</span></label>
+                                        <select id="poPaymentMethod" class="form-control">
+                                            <option value="" disabled selected>-- Select Payment Method --</option>
+                                            <option value="Corporate Card">Corporate Card (Instant Auth)</option>
+                                            <option value="Net 30">Net 30 (Commercial Account)</option>
+                                            <option value="Wire Transfer">Wire Transfer (AOG Escrow)</option>
+                                        </select>
+                                        <span class="field-hint">CYUL Finance Authorized Terms</span>
+                                    </div>
+
+                                    <!-- Vendor Recipient (Readonly context) -->
+                                    <div class="input-group">
+                                        <label>Authorized Supplier</label>
+                                        <input type="text" id="poVendorDisplay" class="form-control" readonly disabled>
+                                        <span class="field-hint">Confirmed EASA/FAA Supplier</span>
+                                    </div>
+                                </div>
+
+                                <div class="grid-3 mt-3">
+                                    <!-- PO Amount (Readonly) -->
+                                    <div class="input-group">
+                                        <label>Committed Landed Amount</label>
+                                        <input type="text" id="poTotalAmountDisplay" class="form-control mono" readonly disabled>
+                                        <span class="field-hint">Unit Price + Freight Total</span>
+                                    </div>
+
+                                    <!-- Delivery Destination -->
+                                    <div class="input-group">
+                                        <label>Delivery Destination</label>
+                                        <input type="text" class="form-control" value="CYUL Hangar 2 - Receiving Dock" readonly disabled>
+                                        <span class="field-hint">Direct Hangar Delivery</span>
+                                    </div>
+
+                                    <!-- Procurement Officer / Authorizer -->
+                                    <div class="input-group">
+                                        <label>Procurement Agent</label>
+                                        <input type="text" class="form-control" value="J. Serna (Line Mechanic)" readonly disabled>
+                                        <span class="field-hint">Requisition Originator</span>
+                                    </div>
+                                </div>
+
+                                <!-- Form Actions / Dispatch Button -->
+                                <div class="form-actions po-actions-row">
+                                    <button type="button" class="btn-ghost" onclick="resetProcurementFlow()">
+                                        <i class="fa-solid fa-rotate-left"></i> Reset Flow
+                                    </button>
+                                    <button type="button" id="btnGeneratePO" class="btn-primary btn-generate-po" onclick="handleGeneratePO()">
+                                        <i class="fa-solid fa-paper-plane"></i> Generate &amp; Send PO
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- ==================== VISTA: VENDOR DIRECTORY (HU-003) ==================== -->
+                    <div id="viewVendors" class="form-wrapper hidden">
+
+                        <!-- Barra de Búsqueda y Filtros de Proveedores -->
+                        <div class="card p-card-sm flex-between">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="vendorSearchInput"
+                                    placeholder="Search by Vendor Name, Code, or Location..." class="form-control"
+                                    onkeyup="filterVendors()">
+                            </div>
+
+                            <div class="filter-group">
+                                <span class="filter-label">Accreditation:</span>
+                                <button type="button" class="btn-filter active" id="btnFilterVendorAll"
+                                    onclick="filterVendorsByStatus('ALL', this)">All (6)</button>
+                                <button type="button" class="btn-filter" id="btnFilterVendorActive"
+                                    onclick="filterVendorsByStatus('Active', this)">TCCA/FAA Approved (5)</button>
+                                <button type="button" class="btn-filter" id="btnFilterVendorSuspended"
+                                    onclick="filterVendorsByStatus('Suspended', this)">Suspended (1)</button>
+                            </div>
+                        </div>
+
+                        <!-- Grid de Tarjetas de Perfil de Proveedores -->
+                        <div class="vendors-grid" id="vendorsGrid">
+
+                            <!-- Proveedor 1: Activo -->
+                            <div class="card vendor-card" data-vendor-name="Boeing Distribution Inc." data-vendor-code="VND-US-0104" data-vendor-location="Miami, Florida, United States" data-vendor-status="Active">
+                                <div class="vendor-card-header">
+                                    <div class="vendor-avatar-icon">
+                                        <i class="fa-solid fa-plane-up"></i>
+                                    </div>
+                                    <div class="vendor-title-wrap">
+                                        <h3 class="vendor-heading">Boeing Distribution Inc.</h3>
+                                        <span class="vendor-id-badge">VND-US-0104</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-body">
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>Miami, Florida, United States</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        <span class="mono">orders@boeingdist.com</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <span>+1 (305) 592-0000 (AOG 24/7 Desk)</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-tags"></i>
+                                        <span>OEM Airframe, Avionics, Fasteners</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-footer">
+                                    <span class="badge-accreditation approved">
+                                        <i class="fa-solid fa-shield-halved"></i> TCCA/FAA Approved
+                                    </span>
+                                    <span class="vendor-active-dot" title="Active Verified Supplier"></span>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor 2: Activo -->
+                            <div class="card vendor-card" data-vendor-name="Aviall Services" data-vendor-code="VND-US-0210" data-vendor-location="Dallas, Texas, United States" data-vendor-status="Active">
+                                <div class="vendor-card-header">
+                                    <div class="vendor-avatar-icon">
+                                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                                    </div>
+                                    <div class="vendor-title-wrap">
+                                        <h3 class="vendor-heading">Aviall Services</h3>
+                                        <span class="vendor-id-badge">VND-US-0210</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-body">
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>Dallas, Texas, United States</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        <span class="mono">aog@aviall.com</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <span>+1 (972) 586-1000</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-tags"></i>
+                                        <span>Engine Parts, Standard Hardware</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-footer">
+                                    <span class="badge-accreditation approved">
+                                        <i class="fa-solid fa-shield-halved"></i> TCCA/FAA Approved
+                                    </span>
+                                    <span class="vendor-active-dot" title="Active Verified Supplier"></span>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor 3: Activo -->
+                            <div class="card vendor-card" data-vendor-name="AeroPrecision Supplies" data-vendor-code="VND-CA-0089" data-vendor-location="Toronto, Ontario, Canada" data-vendor-status="Active">
+                                <div class="vendor-card-header">
+                                    <div class="vendor-avatar-icon">
+                                        <i class="fa-solid fa-gears"></i>
+                                    </div>
+                                    <div class="vendor-title-wrap">
+                                        <h3 class="vendor-heading">AeroPrecision Supplies</h3>
+                                        <span class="vendor-id-badge">VND-CA-0089</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-body">
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>Toronto, Ontario, Canada</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        <span class="mono">quotes@aeroprecision.ca</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <span>+1 (905) 678-2200</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-tags"></i>
+                                        <span>Precision Bearings, Bushings, Seals</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-footer">
+                                    <span class="badge-accreditation approved">
+                                        <i class="fa-solid fa-shield-halved"></i> TCCA/FAA Approved
+                                    </span>
+                                    <span class="vendor-active-dot" title="Active Verified Supplier"></span>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor 4: Activo -->
+                            <div class="card vendor-card" data-vendor-name="Dallas Airmotive Parts" data-vendor-code="VND-US-0342" data-vendor-location="Atlanta, Georgia, United States" data-vendor-status="Active">
+                                <div class="vendor-card-header">
+                                    <div class="vendor-avatar-icon">
+                                        <i class="fa-solid fa-fan"></i>
+                                    </div>
+                                    <div class="vendor-title-wrap">
+                                        <h3 class="vendor-heading">Dallas Airmotive Parts</h3>
+                                        <span class="vendor-id-badge">VND-US-0342</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-body">
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>Atlanta, Georgia, United States</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        <span class="mono">parts@dallasair.com</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <span>+1 (404) 763-8000</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-tags"></i>
+                                        <span>Turbine Engine Hot Section</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-footer">
+                                    <span class="badge-accreditation approved">
+                                        <i class="fa-solid fa-shield-halved"></i> TCCA/FAA Approved
+                                    </span>
+                                    <span class="vendor-active-dot" title="Active Verified Supplier"></span>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor 5: Activo -->
+                            <div class="card vendor-card" data-vendor-name="Bombardier Component Logistics" data-vendor-code="VND-CA-0412" data-vendor-location="Dorval, Quebec, Canada" data-vendor-status="Active">
+                                <div class="vendor-card-header">
+                                    <div class="vendor-avatar-icon">
+                                        <i class="fa-solid fa-jet-fighter-up"></i>
+                                    </div>
+                                    <div class="vendor-title-wrap">
+                                        <h3 class="vendor-heading">Bombardier Component Logistics</h3>
+                                        <span class="vendor-id-badge">VND-CA-0412</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-body">
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>Dorval, Quebec, Canada</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        <span class="mono">mro-support@bombardier.com</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <span>+1 (514) 855-5000</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-tags"></i>
+                                        <span>Flight Controls, Hydraulics, Landing Gear</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-footer">
+                                    <span class="badge-accreditation approved">
+                                        <i class="fa-solid fa-shield-halved"></i> TCCA/FAA Approved
+                                    </span>
+                                    <span class="vendor-active-dot" title="Active Verified Supplier"></span>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor 6: Suspended (Greyed out dummy card con advertencia) -->
+                            <div class="card vendor-card vendor-suspended" data-vendor-name="Apex Aviation Components Ltd." data-vendor-code="VND-QC-0994" data-vendor-location="Mirabel, Quebec, Canada" data-vendor-status="Suspended">
+                                <div class="vendor-card-header">
+                                    <div class="vendor-avatar-icon suspended-icon">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </div>
+                                    <div class="vendor-title-wrap">
+                                        <h3 class="vendor-heading">Apex Aviation Components Ltd.</h3>
+                                        <span class="vendor-id-badge">VND-QC-0994</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-body">
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>Mirabel, Quebec, Canada</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        <span class="mono">compliance@apex-aero.com</span>
+                                    </div>
+                                    <div class="vendor-meta-line">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <span>+1 (450) 476-1100</span>
+                                    </div>
+                                    <!-- Banner de Alerta de Suspensión -->
+                                    <div class="vendor-suspension-alert">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>Quality Audit Hold: Authority temporarily suspended pending TCCA re-certification. No new POs permitted.</span>
+                                    </div>
+                                </div>
+                                <div class="vendor-card-footer">
+                                    <span class="badge-accreditation suspended">
+                                        <i class="fa-solid fa-ban"></i> Suspended
+                                    </span>
+                                    <span class="vendor-suspended-dot" title="Suspended Vendor"></span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- ==================== VISTA: WAREHOUSE RECEIVING (HU-008) ==================== -->
+                    <div id="viewWarehouse" class="form-wrapper hidden">
+
+                        <!-- Context Header Banner del Almacén -->
+                        <div class="card p-card-sm flex-between proc-header-card warehouse-header-card">
+                            <div class="proc-context-details">
+                                <div class="context-badges-row">
+                                    <span class="badge-code"><i class="fa-solid fa-warehouse"></i> Receiving Dock</span>
+                                    <span class="badge-tail"><i class="fa-solid fa-truck-plane"></i> Goods Inbound</span>
+                                    <span class="badge-station"><i class="fa-solid fa-user-gear"></i> Clerk: J. Serna</span>
+                                </div>
+                                <h2 class="proc-part-heading">Inbound Physical Inspection &bull; <span class="text-secondary-title">Goods Receiving</span></h2>
+                                <p class="proc-part-meta">Verify received shipments against Purchase Order specifications, scan Part Numbers, and record packaging integrity.</p>
+                            </div>
+
+                            <div class="proc-workflow-tracker">
+                                <span class="workflow-label">In Transit Shipments</span>
+                                <div id="warehouseCountBadge" class="badge-status-lg status-step-quoting">
+                                    <i class="fa-solid fa-plane-arrival"></i> 1 Awaiting Inspection
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Requerimientos "In Transit" -->
+                        <div class="card p-0">
+                            <div class="card-header p-card-sm flex-between border-b">
+                                <div>
+                                    <div class="step-tag"><i class="fa-solid fa-barcode"></i> HU-008</div>
+                                    <h3>Awaiting Physical Inspection (In Transit)</h3>
+                                    <p>Select a shipment to perform component barcode verification and packaging integrity check.</p>
+                                </div>
+                                <button type="button" class="btn-secondary btn-sm" onclick="refreshWarehouseReceivingTable()">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Refresh Inbound
+                                </button>
+                            </div>
+
+                            <div class="table-container border-0">
+                                <table class="parts-table" id="warehouseTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 140px;">Request ID</th>
+                                            <th style="width: 130px;">Carrier / AWB</th>
+                                            <th style="width: 120px;">Target</th>
+                                            <th style="width: 160px;">Part Number</th>
+                                            <th>Description</th>
+                                            <th style="width: 70px; text-align: center;">Qty</th>
+                                            <th style="width: 100px; text-align: center;">Urgency</th>
+                                            <th style="width: 120px; text-align: center;">Status</th>
+                                            <th style="width: 160px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="warehouseTableBody">
+                                        <!-- Shipment 1 inicial en tránsito -->
+                                        <tr data-id="REQ-2026-0839" data-pn="C253001-0101" data-desc="LOCK ASSY - DOOR L/H" data-target="C-GYBF" data-qty="1" data-carrier="FedEx Aviation" data-awb="7849-2091-8831" data-urgency="AOG">
+                                            <td class="col-id">REQ-2026-0839</td>
+                                            <td>
+                                                <div class="carrier-cell">
+                                                    <strong>FedEx Aviation</strong>
+                                                    <span class="awb-sub mono">7849-2091-8831</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-target">C-GYBF</td>
+                                            <td class="col-pn">C253001-0101</td>
+                                            <td class="col-desc">LOCK ASSY - DOOR L/H</td>
+                                            <td class="col-qty">1</td>
+                                            <td class="text-center"><span class="badge-urgency aog">AOG</span></td>
+                                            <td class="text-center"><span class="badge-status transit">In Transit</span></td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-table-action btn-inspect-action" onclick="openReceivingModal(this)">
+                                                    <i class="fa-solid fa-clipboard-check"></i> Inspect &amp; Receive
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <!-- DRAWER LATERAL DE DETALLES (HU-002) -->
+    <div id="detailsDrawer" class="drawer-panel hidden">
+        <div class="drawer-header">
+            <div>
+                <span class="drawer-subtitle">Technical Requisition</span>
+                <h3 id="drwId" class="drawer-title">REQ-2026-0839</h3>
+            </div>
+            <button type="button" class="btn-icon" onclick="closeDetailsDrawer()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="drawer-body">
+            <!-- Datos generales del requerimiento -->
+            <div class="meta-box">
+                <div class="meta-row"><span>Destination Target:</span><strong id="drwDest">--</strong></div>
+                <div class="meta-row"><span>Part Number:</span><strong id="drwPn">--</strong></div>
+                <div class="meta-row"><span>Description:</span><span id="drwDesc">--</span></div>
+                <div class="meta-row"><span>Operational Status:</span><strong id="drwStatus"
+                        class="status-highlight">--</strong></div>
+            </div>
+
+            <!-- Tarjeta logística (solo visible si está In Transit) -->
+            <div id="drwTransitCard" class="transit-card hidden">
+                <div class="transit-card-header">
+                    <i class="fa-solid fa-plane-arrival"></i>
+                    <span>Logistics Dispatch Track</span>
+                </div>
+                <div class="meta-row"><span>Carrier:</span><strong id="drwCarrier">--</strong></div>
+                <div class="meta-row"><span>AWB / Tracking:</span><span id="drwAwb" class="awb-link">--</span></div>
+                <div class="meta-row"><span>Estimated Arrival:</span><span id="drwEta">--</span></div>
+            </div>
+
+            <!-- Tarjeta de almacén (solo visible si está In Stock) -->
+            <div id="drwStockCard" class="stock-card hidden">
+                <div class="stock-card-header">
+                    <i class="fa-solid fa-warehouse"></i>
+                    <span>Warehouse Placement</span>
+                </div>
+                <div class="meta-row"><span>Storage Location:</span><strong id="drwLoc">--</strong></div>
+                <div class="meta-row"><span>Verification:</span><span>Passed & Available</span></div>
+            </div>
+        </div>
+
+        <div class="drawer-footer">
+            <button type="button" class="btn-ghost w-full" onclick="closeDetailsDrawer()">Close Details</button>
+        </div>
+    </div>
+    <!-- ==================== MODALES OPERATIVAS ==================== -->
+
+    <!-- 1. Modal: Éxito en Registro -->
+    <div id="modalSuccess" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-icon icon-success">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="modal-body text-center">
+                <h3>Request Registered Successfully</h3>
+                <p>The technical requisition has been logged with initial status <span
+                        class="badge-status pending">Pending</span>.</p>
+            </div>
+            <div class="code-box">
+                <span class="code-label">Generated Request Code</span>
+                <span id="successReqId" class="code-value">REQ-2026-0842</span>
+            </div>
+            <!-- Banner de alerta AOG (Criterio 5 HU-001) -->
+            <div id="successAogAlert" class="modal-aog-alert hidden">
+                <div class="aog-alert-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="aog-alert-text">
+                    <strong>CRITICAL AOG DISPATCH ALERT</strong>
+                    <span>Immediate notification broadcasted to Procurement Desk upon approval from Management</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary w-full" onclick="handleGoToRequisitions()">
+                    Go to My Requisitions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Modal: Bloqueo de Duplicado Activo -->
+    <div id="modalBlockedActive" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-danger">
+                    <i class="fa-solid fa-ban"></i>
+                </div>
+                <div>
+                    <h3>Duplicate Request Blocked</h3>
+                    <span>Active Request Detected (Last 30 Days)</span>
+                </div>
+            </div>
+            <p id="blockedActiveMsg" class="modal-description"></p>
+            <div class="meta-box">
+                <div class="meta-row"><span>Existing ID:</span><strong id="blkReqId">--</strong></div>
+                <div class="meta-row"><span>Destination:</span><strong id="blkTail">--</strong></div>
+                <div class="meta-row"><span>Current Status:</span><strong id="blkStatus"
+                        class="status-highlight">--</strong></div>
+                <div class="meta-row"><span>Logged UTC:</span><span id="blkDate">--</span></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-dark w-full" onclick="closeModal('modalBlockedActive')">
+                    Understood & Review
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Modal: Advertencia de Existencias en Almacén (In Stock) -->
+    <div id="modalStockWarning" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-warning">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+                <div>
+                    <h3>Stock Availability Warning</h3>
+                    <span>Component Located In Hangar Warehouse</span>
+                </div>
+            </div>
+            <p id="stockWarningMsg" class="modal-description"></p>
+            <div class="meta-box meta-warning">
+                <div class="meta-row"><span>Physical Location:</span><strong id="warnLoc">--</strong></div>
+                <div class="meta-row"><span>Admission Date:</span><span id="warnDate">--</span></div>
+            </div>
+            <div class="modal-actions-split">
+                <button type="button" class="btn-ghost" onclick="closeModal('modalStockWarning')">
+                    Cancel & Verify
+                </button>
+                <button type="button" class="btn-warning" onclick="handleOverrideStock()">
+                    Proceed Anyway
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- 4. Modal: Edición de Requerimiento (Pending) -->
+    <div id="modalEditReq" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-info">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <div>
+                    <h3>Edit Requisition</h3>
+                    <span id="editModalSub">Modify Quantity or Urgency</span>
+                </div>
+            </div>
+
+            <div class="meta-box">
+                <div class="meta-row"><span>Request ID:</span><strong id="editReqId">--</strong></div>
+                <div class="meta-row"><span>Part Number:</span><strong id="editPn">--</strong></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="editQtyInput" min="1" class="form-control mono text-center"
+                    style="max-width: 120px;">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Urgency Level</label>
+                <div class="radio-toggle-group">
+                    <label class="radio-toggle">
+                        <input type="radio" name="editUrgencyRadio" value="Routine" id="editUrgRoutine">
+                        <span class="toggle-box"><i class="fa-regular fa-clock"></i> Routine</span>
+                    </label>
+                    <label class="radio-toggle">
+                        <input type="radio" name="editUrgencyRadio" value="AOG" id="editUrgAog">
+                        <span class="toggle-box alert-aog"><i class="fa-solid fa-triangle-exclamation"></i> AOG</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-actions-split" style="margin-top: 1.5rem;">
+                <button type="button" class="btn-ghost" onclick="closeModal('modalEditReq')">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmSaveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Modal: Cancelar / Eliminar con Motivo Obligatorio -->
+    <div id="modalDeleteReq" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-danger">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <div>
+                    <h3>Cancel Requisition</h3>
+                    <span id="deleteModalSub">Formal Cancellation Request</span>
+                </div>
+            </div>
+
+            <div class="meta-box">
+                <div class="meta-row"><span>Request ID:</span><strong id="deleteReqId">--</strong></div>
+                <div class="meta-row"><span>Target:</span><strong id="deleteTarget">--</strong></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label">Cancellation Reason <span style="color:red">*</span></label>
+                <textarea id="deleteReasonInput" rows="3" class="form-control"
+                    placeholder="Specify technical or operational reason for cancelling this order..."></textarea>
+            </div>
+
+            <div class="modal-actions-split" style="margin-top: 1.5rem;">
+                <button type="button" class="btn-ghost" onclick="closeModal('modalDeleteReq')">Keep Request</button>
+                <button type="button" class="btn-danger-solid" onclick="confirmDeleteRequisition()">Confirm
+                    Cancellation</button>
+            </div>
+        </div>
+    </div>
+    <!-- 6. Modal: Rechazo de Cotización con Motivo Obligatorio (HU-005) -->
+    <div id="modalRejectQuote" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-danger">
+                    <i class="fa-solid fa-ban"></i>
+                </div>
+                <div>
+                    <h3>Reject Vendor Quote</h3>
+                    <span>Formal Manager Justification Required</span>
+                </div>
+            </div>
+
+            <div class="meta-box">
+                <div class="meta-row"><span>Target Vendor:</span><strong id="rejectModalVendor">--</strong></div>
+                <div class="meta-row"><span>Total Amount:</span><strong id="rejectModalTotal">--</strong></div>
+                <div class="meta-row"><span>Part Number:</span><span>C253001-0101</span></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label" for="rejectionReasonInput">Rejection Reason <span class="required">*</span></label>
+                <textarea id="rejectionReasonInput" rows="3" class="form-control"
+                    placeholder="Specify justification (e.g., Freight rate excessive, delivery schedule does not meet AOG timeline, alternative OEM stock identified)..."></textarea>
+                <span id="rejectionErrorText" class="input-error-msg hidden">
+                    <i class="fa-solid fa-circle-exclamation"></i> A valid rejection reason is required before confirming.
+                </span>
+            </div>
+
+            <div class="modal-actions-split" style="margin-top: 1.5rem;">
+                <button type="button" class="btn-ghost" onclick="closeModal('modalRejectQuote')">Cancel</button>
+                <button type="button" class="btn-danger-solid" onclick="confirmRejectQuote()">Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Modal: Orden de Compra Generada con Éxito (HU-006) -->
+    <div id="modalPoSuccess" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-icon icon-success">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="modal-body text-center">
+                <h3>Purchase Order Issued Successfully</h3>
+                <p>The Purchase Order has been electronically transmitted to the vendor and logged into the AeroSupply procurement system.</p>
+            </div>
+            <div class="code-box">
+                <span class="code-label">Dispatched PO Number</span>
+                <span id="poSuccessDisplayNumber" class="code-value">PO-2026-8942</span>
+            </div>
+            <div class="meta-box">
+                <div class="meta-row"><span>Vendor:</span><strong id="poSuccessVendor">--</strong></div>
+                <div class="meta-row"><span>Payment Terms:</span><strong id="poSuccessPayment">--</strong></div>
+                <div class="meta-row"><span>Committed Landed Amount:</span><strong id="poSuccessAmount">--</strong></div>
+                <div class="meta-row"><span>Updated Status:</span><span class="badge-status instock">Purchased</span></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary w-full" onclick="closeModal('modalPoSuccess')">
+                    <i class="fa-solid fa-check"></i> Return to Procurement View
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Modal: Registro de Despacho Logístico (HU-007) -->
+    <div id="modalLogisticsDispatch" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-info">
+                    <i class="fa-solid fa-truck-plane"></i>
+                </div>
+                <div>
+                    <h3>Register Logistics Dispatch</h3>
+                    <span>Carrier Allocation &amp; Waybill Tracking</span>
+                </div>
+            </div>
+
+            <div class="meta-box">
+                <div class="meta-row"><span>Requisition ID:</span><strong id="dispReqId">--</strong></div>
+                <div class="meta-row"><span>Part Number:</span><strong id="dispPn">--</strong></div>
+                <div class="meta-row"><span>Destination Target:</span><span id="dispTarget">--</span></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label" for="dispCarrierSelect">Carrier <span class="required">*</span></label>
+                <select id="dispCarrierSelect" class="form-control">
+                    <option value="" disabled selected>-- Select Air Cargo Carrier --</option>
+                    <option value="FedEx">FedEx</option>
+                    <option value="DHL">DHL</option>
+                    <option value="UPS">UPS</option>
+                    <option value="Specialized Air Cargo">Specialized Air Cargo</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.85rem;">
+                <div class="flex-between">
+                    <label class="form-label" for="dispAwbInput">Tracking Number / AWB <span class="required">*</span></label>
+                    <button type="button" class="btn-ghost-sm" onclick="autoGenerateAwb()">Auto-Fill Sample AWB</button>
+                </div>
+                <input type="text" id="dispAwbInput" class="form-control mono uppercase" placeholder="e.g. 7849-2091-8831">
+                <span id="dispErrorText" class="input-error-msg hidden">
+                    <i class="fa-solid fa-circle-exclamation"></i> Please select a carrier and provide a valid Tracking / AWB number.
+                </span>
+            </div>
+
+            <div class="modal-actions-split" style="margin-top: 1.5rem;">
+                <button type="button" class="btn-ghost" onclick="closeModal('modalLogisticsDispatch')">Cancel</button>
+                <button type="button" class="btn-primary" onclick="confirmLogisticsDispatch()">
+                    <i class="fa-solid fa-plane-departure"></i> Confirm Dispatch
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. Modal: Inspección Física y Recepción en Almacén (HU-008) -->
+    <div id="modalWarehouseInspection" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header-alert">
+                <div class="modal-icon-sm icon-primary">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h3>Inbound Physical Inspection</h3>
+                    <span>Receiving Verification &bull; Form 1 / 8130-3</span>
+                </div>
+            </div>
+
+            <div class="meta-box">
+                <div class="meta-row"><span>Requisition ID:</span><strong id="inspReqId">--</strong></div>
+                <div class="meta-row"><span>Carrier &amp; AWB:</span><span id="inspCarrierAwb">--</span></div>
+                <div class="meta-row"><span>Destination Target:</span><strong id="inspDest">--</strong></div>
+            </div>
+
+            <!-- 1. Expected Part Number (readonly) -->
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label" for="inspExpectedPn">Expected Part Number</label>
+                <input type="text" id="inspExpectedPn" class="form-control mono uppercase font-bold" readonly disabled>
+            </div>
+
+            <!-- 2. Scanned Part Number (text input for matching) -->
+            <div class="form-group" style="margin-top: 0.85rem;">
+                <div class="flex-between">
+                    <label class="form-label" for="inspScannedPn">Scanned Part Number <span class="required">*</span></label>
+                    <button type="button" class="btn-ghost-sm" onclick="simulateBarcodeScan()" title="Auto-match expected barcode for demo">
+                        <i class="fa-solid fa-barcode"></i> Match P/N
+                    </button>
+                </div>
+                <input type="text" id="inspScannedPn" class="form-control mono uppercase" placeholder="Scan barcode or type received P/N...">
+                <span id="inspPnError" class="input-error-msg hidden">Please enter or scan the received Part Number.</span>
+            </div>
+
+            <!-- 3. Packaging Integrity (Toggle/Radio: Intact / Damaged) -->
+            <div class="form-group" style="margin-top: 0.85rem;">
+                <label class="form-label">Packaging Integrity <span class="required">*</span></label>
+                <div class="packaging-toggle-group">
+                    <label class="packaging-toggle-option active" id="lblPkgIntact">
+                        <input type="radio" name="packagingRadio" value="Intact" checked onchange="togglePackagingStyle()">
+                        <i class="fa-solid fa-box"></i> Intact
+                    </label>
+                    <label class="packaging-toggle-option" id="lblPkgDamaged">
+                        <input type="radio" name="packagingRadio" value="Damaged" onchange="togglePackagingStyle()">
+                        <i class="fa-solid fa-box-tissue"></i> Damaged
+                    </label>
+                </div>
+            </div>
+
+            <!-- Non-Conformity Warning Box (Dynamic) -->
+            <div id="nonConformityAlert" class="inspection-alert-box hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div class="alert-content">
+                    <strong>NON-CONFORMITY / QUARANTINE WARNING</strong>
+                    <span id="nonConformityMsg">Packaging is damaged or Part Number does not match. Component will be quarantined with a Red Tag.</span>
+                </div>
+            </div>
+
+            <div class="modal-actions-split" style="margin-top: 1.5rem;">
+                <button type="button" class="btn-ghost" onclick="closeModal('modalWarehouseInspection')">Cancel</button>
+                <button type="button" class="btn-primary" id="btnSubmitInspection" onclick="submitWarehouseInspection()">
+                    <i class="fa-solid fa-check-double"></i> Complete Receiving
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
